@@ -29,17 +29,27 @@ df["unq_id"] = 'Cust_' + df["timestamp"].astype(str) + '_no_' + df["customer_no"
 
 df = df[['timestamp', 'unq_id', 'customer_no', 'location' , 'revenue_per_minute']]
 
-df = df.sort_values(['customer_no', 'timestamp'])
-df.set_index('timestamp', inplace=True)
-df = df.groupby('unq_id').resample('1min').fillna('ffill')
+#######################
+# trans prop
+########################
 
-df['before'] = df['location'].shift(1)
+df_tp = df.sort_values(['customer_no', 'timestamp'])
+df_tp.set_index('timestamp', inplace=True)
+df_tp = df_tp.groupby('customer_no').resample('1min').fillna('ffill')
+df_tp['before'] = df_tp['location'].shift(1)
 
-df = df.drop(columns=['unq_id'])
-
-df.to_csv('data/df_prepped.csv', index=True)
-
-trans_prob = pd.crosstab(df['location'], df['before'], normalize=0)
-
+trans_prob = pd.crosstab(df_tp['location'], df_tp['before'], normalize=0)
 trans_prob.to_csv('data/trans_matrix_prob.csv', index=True)
+
+#######################
+# prepped data
+######################
+df_prep = df.sort_values(['customer_no', 'timestamp'])
+df_prep.set_index('timestamp', inplace=True)
+df_prep = df_prep.groupby('unq_id').resample('1min').fillna('ffill')
+df_prep['before'] = df_prep['location'].shift(1)
+
+df_prep = df_prep.drop(columns=['unq_id'])
+
+df_prep.to_csv('data/df_prepped.csv', index=True)
 
